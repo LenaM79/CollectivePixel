@@ -1,40 +1,25 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
-const webRoomsWebSocketServerAddr = 'wss://nosch.uber.space/web-rooms/';
+const gridSize = 10; // 10x10 Felder
+const pixelSize = 400 / gridSize; // Jedes Feld ist 40x40 Pixel
 
-const gridSize = 10;
+let myPixelIndices = []; // Hier speichert der Server deine zugewiesenen Felder
+let pixelColors = Array(gridSize * gridSize).fill(null); // Farben aller Felder
 
-let myPixelIndices = [];
-let pixelColors = Array(gridSize * gridSize).fill(null);
-
-// Hilfsfunktion für WebSocket-Kommunikation
-function sendRequest(...message) {
-  const str = JSON.stringify(message);
-  socket.send(str);
-}
-
-// Canvas-Größe anpassen
-function CanvasSize() {
-  const size = 400;
-  canvas.width = size;
-  canvas.height = size;
-  pixelSize = size / gridSize;
-  drawGrid();
-}
-
-window.addEventListener('resize', CanvasSize);
-
-// Grid zeichnen
+// Zeichnet das Spielfeld
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (let y = 0; y < gridSize; y++) {
     for (let x = 0; x < gridSize; x++) {
       const index = y * gridSize + x;
+      // Wenn Feld gefärbt, dann diese Farbe
       if (pixelColors[index]) {
         ctx.fillStyle = pixelColors[index];
+      // Wenn Feld dir zugewiesen, dann grau
       } else if (myPixelIndices.includes(index)) {
-        ctx.fillStyle = "#e0e0e0"; // Deine zugewiesenen Pixel
+        ctx.fillStyle = "#e0e0e0";
+      // Sonst weiß
       } else {
         ctx.fillStyle = "#fff";
       }
@@ -45,12 +30,13 @@ function drawGrid() {
   }
 }
 
-// Pixel färben und an Server schicken
+// Wenn du auf ein Feld klickst
 canvas.addEventListener('click', function (event) {
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((event.clientX - rect.left) / pixelSize);
   const y = Math.floor((event.clientY - rect.top) / pixelSize);
   const index = y * gridSize + x;
+  // Nur deine Felder dürfen gefärbt werden
   if (myPixelIndices.includes(index)) {
     pixelColors[index] = colorPicker.value;
     drawGrid();
@@ -58,34 +44,39 @@ canvas.addEventListener('click', function (event) {
   }
 });
 
-// WebSocket-Verbindung zum Server herstellen
-const socket = new WebSocket(webRoomsWebSocketServerAddr);
+// WebSocket-Verbindung zum Server
+const socket = new WebSocket('wss://nosch.uber.space/web-rooms/');
 
+// Hilfsfunktion zum Senden von Nachrichten
+function sendRequest(...message) {
+  socket.send(JSON.stringify(message));
+}
+
+// Wenn Verbindung steht, Raum betreten
 socket.addEventListener('open', () => {
   sendRequest('*enter-room*', 'collective-pixel');
 });
 
+// Nachrichten vom Server verarbeiten
 socket.addEventListener('message', (event) => {
-  const data = event.data;
-  if (data.length > 0) {
-    const incoming = JSON.parse(data);
-    const selector = incoming[0];
-
-    switch (selector) {
-      case 'init':
-        myPixelIndices = incoming[1]; // Deine zugewiesenen Pixel (Array von Indizes)
-        pixelColors = incoming[2];    // Aktueller Stand aller Pixel (Array)
-        drawGrid();
-        break;
-      case 'color':
-        const index = incoming[1];
-        const color = incoming[2];
-        pixelColors[index] = color;
-        drawGrid();
-        break;
-      // Weitere Fälle nach Bedarf
-    }
+  const incoming = JSON.parse(event.data);
+  const selector = incoming[0];
+  switch (selector) {
+    case 'init':
+      myPixelIndices = incoming[1]; // Deine Felder
+      pixelColors = incoming[2];    // Alle Farben
+      drawGrid();
+      break;
+    case 'color':
+      const index = incoming[1];
+      const color = incoming[2];
+      pixelColors[index] = color;
+      drawGrid();
+      break;
   }
 });
 
-updateCanvasSize();
+// Canvas-Größe fest einstellen und zeichnen
+canvas.width = 400;
+canvas.height = 400;
+drawGrid();
