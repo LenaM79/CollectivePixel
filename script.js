@@ -54,7 +54,7 @@ function sendRequest(...message) {
 
 // Wenn Verbindung steht, Raum betreten
 socket.addEventListener('open', () => {
-  sendRequest('*enter-room*', 'collective-pixel');
+  sendRequest('*enter-room*', 'CollectivePixel');
 });
 
 // Nachrichten vom Server verarbeiten
