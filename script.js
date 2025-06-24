@@ -60,6 +60,7 @@ socket.addEventListener('open', () => {
 // Nachrichten vom Server verarbeiten
 socket.addEventListener('message', (event) => {
   const incoming = JSON.parse(event.data);
+  console.log('Nachricht vom Server:', incoming);
   const selector = incoming[0];
   switch (selector) {
     case 'init':
