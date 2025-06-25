@@ -30,17 +30,27 @@ function drawGrid() {
   }
 }
 
+// Neustart-Button: Setzt alle Pixel auf leer (nur lokal!)
+document.getElementById('resetBtn').addEventListener('click', function () {
+  pixelColors = Array(gridSize * gridSize).fill(null);
+  drawGrid();
+});
+
 // Wenn du auf ein Feld klickst
 canvas.addEventListener('click', function (event) {
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((event.clientX - rect.left) / pixelSize);
   const y = Math.floor((event.clientY - rect.top) / pixelSize);
   const index = y * gridSize + x;
-  // Nur deine Felder dürfen gefärbt werden
+  const errorMsg = document.getElementById('errorMsg');
   if (myPixelIndices.includes(index)) {
     pixelColors[index] = colorPicker.value;
     drawGrid();
     sendRequest('color', index, colorPicker.value);
+    errorMsg.textContent = "";
+  } else {
+    errorMsg.textContent = "Das ist nicht dein Kästchen!";
+    setTimeout(() => errorMsg.textContent = "", 1500);
   }
 });
 
