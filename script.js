@@ -3,7 +3,7 @@ const canvas = document.getElementById('canvas'); // Spielfeld
 const ctx = canvas.getContext('2d'); //2D-Kontext für zeichnen
 const colorPicker = document.getElementById('colorPicker'); // Farbauswahl
 const gridSize = 10; // 10x10 Felder
-const pixelSize = 600 / gridSize; // Jedes Feld ist 40x40 Pixel
+const pixelSize = 400 / gridSize; // Jedes Feld ist 40x40 Pixel
 
 let pixelColors = Array(gridSize * gridSize).fill(null); // Farben aller Felder
 
