@@ -5,7 +5,6 @@ const colorPicker = document.getElementById('colorPicker'); // Farbauswahl
 const gridSize = 10; // 10x10 Felder
 const pixelSize = 400 / gridSize; // Jedes Feld ist 40x40 Pixel
 
-let myPixelIndices = []; // Hier speichert der Server deine zugewiesenen Felder
 let pixelColors = Array(gridSize * gridSize).fill(null); // Farben aller Felder
 
 // Zeichnet das Spielfeld
@@ -14,17 +13,8 @@ function drawGrid() {
   for (let y = 0; y < gridSize; y++) {
     for (let x = 0; x < gridSize; x++) {
       const index = y * gridSize + x;
-      // Wenn Feld gefärbt, dann diese Farbe
-      if (pixelColors[index]) {
-        ctx.fillStyle = pixelColors[index];
-      // Wenn Feld dir zugewiesen, dann grau
-      } else if (myPixelIndices.includes(index)) {
-        ctx.fillStyle = "#e0e0e0";
-      // Sonst weiß
-      } else {
-        ctx.fillStyle = "#fff";
-      }
-      // alle anderen Felder (nicht gefärbt, nicht deins) bleiben weiß
+      // Wenn Feld gefärbt, dann diese Farbe, sonst weiß
+      ctx.fillStyle = pixelColors[index] ? pixelColors[index] : "#fff";
       ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
       ctx.strokeStyle = "#ccc";
       ctx.strokeRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
@@ -44,19 +34,9 @@ canvas.addEventListener('click', function (event) {
   const x = Math.floor((event.clientX - rect.left) / pixelSize);
   const y = Math.floor((event.clientY - rect.top) / pixelSize);
   const index = y * gridSize + x;
-  const errorMsg = document.getElementById('errorMsg');
-  // wenn dir das Feld zugewiesen ist
-  // if (myPixelIndices.includes(index)) { 
-    pixelColors[index] = colorPicker.value; // fäbrt Feld in ausgewählter Farbe
-    drawGrid();
-    sendRequest('*broadcast-message*', ['color', index, colorPicker.value]); // sendet Änderung an Server, damit andere sie sehen
-    errorMsg.textContent = "";
-
-  // wenn dir das Feld nicht zugewiesen ist
-  // } else { 
-  //   errorMsg.textContent = "Das ist nicht dein Kästchen!"; // Fehlermeldung
-  //   setTimeout(() => errorMsg.textContent = "", 1500); // Fehlermeldung ausblenden nach 1,5 Sek
-  // }
+  pixelColors[index] = colorPicker.value; // Jeder darf jedes Feld färben
+  drawGrid();
+  sendRequest('*broadcast-message*', ['color', index, colorPicker.value]);
 });
 
 // WebSocket-Verbindung zum Server
@@ -79,7 +59,6 @@ socket.addEventListener('message', (event) => {
   const selector = incoming[0];
   switch (selector) {
     case 'init':
-      myPixelIndices = incoming[1]; // Deine Felder
       pixelColors = incoming[2];    // Alle Farben
       drawGrid();
       break;
