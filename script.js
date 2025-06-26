@@ -1,6 +1,7 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const colorPicker = document.getElementById('colorPicker');
+// wichtige Elemente aus dem HTML, damit ich im JS darauf zugreifen kann
+const canvas = document.getElementById('canvas'); // Spielfeld
+const ctx = canvas.getContext('2d'); //2D-Kontext für zeichnen
+const colorPicker = document.getElementById('colorPicker'); // Farbauswahl
 const gridSize = 10; // 10x10 Felder
 const pixelSize = 400 / gridSize; // Jedes Feld ist 40x40 Pixel
 
@@ -23,6 +24,7 @@ function drawGrid() {
       } else {
         ctx.fillStyle = "#fff";
       }
+      // alle anderen Felder (nicht gefärbt, nicht deins) bleiben weiß
       ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
       ctx.strokeStyle = "#ccc";
       ctx.strokeRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
@@ -43,15 +45,18 @@ canvas.addEventListener('click', function (event) {
   const y = Math.floor((event.clientY - rect.top) / pixelSize);
   const index = y * gridSize + x;
   const errorMsg = document.getElementById('errorMsg');
-  if (myPixelIndices.includes(index)) {
-    pixelColors[index] = colorPicker.value;
+  // wenn dir das Feld zugewiesen ist
+  // if (myPixelIndices.includes(index)) { 
+    pixelColors[index] = colorPicker.value; // fäbrt Feld in ausgewählter Farbe
     drawGrid();
-    sendRequest('color', index, colorPicker.value);
+    sendRequest('*broadcast-message*', ['color', index, colorPicker.value]); // sendet Änderung an Server, damit andere sie sehen
     errorMsg.textContent = "";
-  } else {
-    errorMsg.textContent = "Das ist nicht dein Kästchen!";
-    setTimeout(() => errorMsg.textContent = "", 1500);
-  }
+
+  // wenn dir das Feld nicht zugewiesen ist
+  // } else { 
+  //   errorMsg.textContent = "Das ist nicht dein Kästchen!"; // Fehlermeldung
+  //   setTimeout(() => errorMsg.textContent = "", 1500); // Fehlermeldung ausblenden nach 1,5 Sek
+  // }
 });
 
 // WebSocket-Verbindung zum Server
